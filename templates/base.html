@@ -1,0 +1,119 @@
+{% load static %}<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Automotive Records{% endblock %} — Реестр мировых автомобильных рекордов</title>
+    <meta name="description" content="Automotive Records — цифровая энциклопедия мировых автомобильных рекордов: скорость, мощность, цена, технологии и надёжность.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <a class="skip-link" href="#main-content">Перейти к содержимому</a>
+
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="{% url 'records:home' %}" class="brand">
+                <span class="brand-mark">AR</span>
+                <span class="brand-text">
+                    <span class="brand-title">Automotive Records</span>
+                    <span class="brand-subtitle">Реестр мировых рекордов</span>
+                </span>
+            </a>
+
+            <nav class="main-nav" aria-label="Основная навигация">
+                <a href="{% url 'records:car_list' %}" class="nav-link{% if request.resolver_match.url_name == 'car_list' %} is-active{% endif %}">Все рекорды</a>
+                <a href="{% url 'records:balanced' %}" class="nav-link{% if request.resolver_match.url_name == 'balanced' %} is-active{% endif %}">Идеальный баланс</a>
+                <a href="{% url 'records:compare' %}" class="nav-link{% if request.resolver_match.url_name == 'compare' %} is-active{% endif %}">
+                    Сравнение
+                    {% with compare_count=request.session.compare_car_ids|length %}
+                        {% if compare_count %}<span class="nav-badge">{{ compare_count }}</span>{% endif %}
+                    {% endwith %}
+                </a>
+                {% if user.is_authenticated %}
+                    <a href="{% url 'records:favorite_list' %}" class="nav-link{% if request.resolver_match.url_name == 'favorite_list' %} is-active{% endif %}">Избранное</a>
+                {% endif %}
+            </nav>
+
+            <form class="header-search" action="{% url 'records:search' %}" method="get" role="search">
+                <input type="search" name="q" placeholder="Поиск автомобиля..." value="{{ request.GET.q|default:'' }}" aria-label="Поиск">
+                <button type="submit" aria-label="Найти">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </button>
+            </form>
+
+            <div class="header-account">
+                {% if user.is_authenticated %}
+                    <span class="account-name">{{ user.username }}</span>
+                    <form action="{% url 'records:logout' %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-link">Выйти</button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'records:login' %}" class="btn-link">Войти</a>
+                    <a href="{% url 'records:signup' %}" class="btn btn-gold btn-small">Регистрация</a>
+                {% endif %}
+            </div>
+
+            <button class="nav-toggle" aria-label="Открыть меню" aria-expanded="false" id="navToggle">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+
+        <nav class="mobile-nav" id="mobileNav" aria-label="Мобильная навигация">
+            <a href="{% url 'records:car_list' %}">Все рекорды</a>
+            <a href="{% url 'records:balanced' %}">Идеальный баланс</a>
+            <a href="{% url 'records:compare' %}">Сравнение</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'records:favorite_list' %}">Избранное</a>
+                <form action="{% url 'records:logout' %}" method="post">{% csrf_token %}<button type="submit">Выйти</button></form>
+            {% else %}
+                <a href="{% url 'records:login' %}">Войти</a>
+                <a href="{% url 'records:signup' %}">Регистрация</a>
+            {% endif %}
+        </nav>
+    </header>
+
+    {% if messages %}
+        <div class="messages-wrap">
+            {% for message in messages %}
+                <div class="message message-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <main id="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-brand">
+                <span class="brand-mark">AR</span>
+                <p>Automotive Records — независимый реестр мировых автомобильных достижений: скорость, мощность, технологии, надёжность и экология в одном месте.</p>
+            </div>
+            <div class="footer-cols">
+                <div class="footer-col">
+                    <h4>Категории</h4>
+                    {% for cat in nav_categories %}
+                        <a href="{{ cat.get_absolute_url }}">{{ cat.name }}</a>
+                    {% endfor %}
+                </div>
+                <div class="footer-col">
+                    <h4>Платформа</h4>
+                    <a href="{% url 'records:car_list' %}">Все рекорды</a>
+                    <a href="{% url 'records:balanced' %}">Идеальный баланс</a>
+                    <a href="{% url 'records:compare' %}">Сравнение моделей</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-legal">© {% now "Y" %} Automotive Records. Данные приведены в справочных и развлекательных целях.</div>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

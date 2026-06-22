@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% load records_extras %}
+
+{% block title %}Все рекорды{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="breadcrumbs"><a href="{% url 'records:home' %}">Главная</a> / {% block page_header_crumb %}Все рекорды{% endblock %}</div>
+        <h1>{% block page_header_title %}Все автомобили и рекорды{% endblock %}</h1>
+        <p class="page-header-lead">{% block page_header_lead %}Полный реестр с возможностью поиска, фильтрации по категории, году, типу топлива и сортировки по любому параметру.{% endblock %}</p>
+    </div>
+</div>
+
+<div class="container list-layout">
+    <aside class="filter-panel">
+        <form method="get" id="filterForm">
+            <h3>Поиск и фильтры</h3>
+
+            <div class="field-group">
+                <label for="id_q">Поиск</label>
+                {{ filter_form.q }}
+            </div>
+
+            <div class="field-group">
+                <label for="id_category">Категория</label>
+                {{ filter_form.category }}
+            </div>
+
+            <div class="field-group">
+                <label>Год выпуска</label>
+                <div class="field-row">
+                    {{ filter_form.year_from }}
+                    {{ filter_form.year_to }}
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label for="id_manufacturer">Производитель</label>
+                {{ filter_form.manufacturer }}
+            </div>
+
+            <div class="field-group">
+                <label for="id_fuel_type">Тип топлива</label>
+                {{ filter_form.fuel_type }}
+            </div>
+
+            <input type="hidden" name="sort" value="{{ request.GET.sort }}">
+
+            <button type="submit" class="btn btn-gold btn-block">Применить</button>
+            <a href="{% url 'records:car_list' %}" class="btn btn-ghost btn-block" style="margin-top:8px;">Сбросить</a>
+        </form>
+    </aside>
+
+    <div>
+        <div class="results-bar">
+            <div class="results-count">Найдено: <strong>{{ paginator.count }}</strong> автомобилей</div>
+            <form method="get" class="results-sort">
+                <input type="hidden" name="q" value="{{ request.GET.q }}">
+                <input type="hidden" name="category" value="{{ request.GET.category }}">
+                <input type="hidden" name="manufacturer" value="{{ request.GET.manufacturer }}">
+                <input type="hidden" name="year_from" value="{{ request.GET.year_from }}">
+                <input type="hidden" name="year_to" value="{{ request.GET.year_to }}">
+                <input type="hidden" name="fuel_type" value="{{ request.GET.fuel_type }}">
+                <label for="id_sort">Сортировка:</label>
+                <select name="sort" id="id_sort" data-auto-submit>
+                    {% for value, label in filter_form.fields.sort.choices %}
+                        <option value="{{ value }}" {% if request.GET.sort == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        {% if cars %}
+        <div class="data-table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Автомобиль</th>
+                        <th>Категория</th>
+                        <th class="num">Скорость</th>
+                        <th class="num">Мощность</th>
+                        <th class="num">Цена</th>
+                        {% if balance_scores %}<th class="num">Баланс</th>{% endif %}
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for car in cars %}
+                    <tr>
+                        <td>
+                            <a href="{{ car.get_absolute_url }}" class="table-car-cell">
+                                {% if car.photo %}<img src="{{ car.photo.url }}" alt="">{% else %}<span class="table-car-noimg"></span>{% endif %}
+                                <span>
+                                    <span class="name">{{ car.manufacturer }} {{ car.name }}</span><br>
+                                    <span class="meta">{{ car.year }}</span>
+                                </span>
+                            </a>
+                        </td>
+                        <td>{% if car.record_category %}<span class="tag">{{ car.record_category.name }}</span>{% endif %}</td>
+                        <td class="num">{% if car.top_speed_kmh %}{{ car.top_speed_kmh }} км/ч{% else %}—{% endif %}</td>
+                        <td class="num">{% if car.power_hp %}{{ car.power_hp }} л.с.{% else %}—{% endif %}</td>
+                        <td class="num">{{ car.price_usd|usd }}</td>
+                        {% if balance_scores %}<td class="num">{{ balance_scores|get_item:car.pk }}</td>{% endif %}
+                        <td class="num">
+                            <a href="{{ car.get_absolute_url }}" class="btn btn-outline btn-small">Подробнее</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if is_paginated %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?{{ querystring_no_page }}page={{ page_obj.previous_page_number }}">‹</a>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+                {% if num == page_obj.number %}
+                    <span class="is-current">{{ num }}</span>
+                {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+                    <a href="?{{ querystring_no_page }}page={{ num }}">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+                <a href="?{{ querystring_no_page }}page={{ page_obj.next_page_number }}">›</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <h3>Ничего не найдено</h3>
+            <p>Попробуйте изменить параметры поиска или сбросить фильтры.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

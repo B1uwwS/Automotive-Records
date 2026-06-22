@@ -1,0 +1,6 @@
+{% extends "records/car_list.html" %}
+
+{% block title %}Результаты поиска{% if request.GET.q %}: {{ request.GET.q }}{% endif %}{% endblock %}
+{% block page_header_crumb %}Поиск{% endblock %}
+{% block page_header_title %}Результаты поиска{% if request.GET.q %} «{{ request.GET.q }}»{% endif %}{% endblock %}
+{% block page_header_lead %}Найдены автомобили, соответствующие вашему запросу по названию, производителю, году или характеристикам.{% endblock %}

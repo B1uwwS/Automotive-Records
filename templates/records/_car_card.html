@@ -1,0 +1,57 @@
+{% load records_extras %}
+<div class="car-card">
+    <div class="car-card-photo">
+        {% if car.record_category %}
+            <span class="car-card-category">{{ car.record_category.name }}</span>
+        {% endif %}
+        {% if car.photo %}
+            <img src="{{ car.photo.url }}" alt="{{ car }}" loading="lazy">
+        {% else %}
+            <div class="no-photo">Фото не загружено</div>
+        {% endif %}
+    </div>
+    <div class="car-card-body">
+        <h3 class="car-card-name"><a href="{{ car.get_absolute_url }}">{{ car.manufacturer }} {{ car.name }}</a></h3>
+        <span class="car-card-meta">{{ car.year }} · {{ car.get_fuel_type_display }}</span>
+
+        <div class="car-card-specs">
+            {% if car.top_speed_kmh %}
+            <div class="car-card-spec">
+                <span class="v">{{ car.top_speed_kmh }}</span>
+                <span class="l">км/ч</span>
+            </div>
+            {% endif %}
+            {% if car.power_hp %}
+            <div class="car-card-spec">
+                <span class="v">{{ car.power_hp }}</span>
+                <span class="l">л.с.</span>
+            </div>
+            {% endif %}
+            {% if car.price_usd %}
+            <div class="car-card-spec">
+                <span class="v">{{ car.price_usd|usd }}</span>
+                <span class="l">цена</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="car-card-actions">
+            {% if user.is_authenticated %}
+            <form action="{% url 'records:favorite_toggle' car.slug %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" class="icon-btn" aria-label="В избранное" title="В избранное">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8z"/></svg>
+                </button>
+            </form>
+            {% endif %}
+            <form action="{% url 'records:compare_toggle' car.slug %}" method="post" style="flex:1;">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" class="btn btn-ghost btn-small btn-block{% if car.pk|in_list:compare_ids %} is-active{% endif %}">
+                    {% if car.pk|in_list:compare_ids %}В сравнении ✓{% else %}Сравнить{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Идеальный сбалансированный автомобиль{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="breadcrumbs"><a href="{% url 'records:home' %}">Главная</a> / Идеальный баланс</div>
+        <span class="hero-eyebrow">Уникальный алгоритм реестра</span>
+        <h1>Идеальный сбалансированный автомобиль</h1>
+        <p class="page-header-lead">
+            Алгоритм считает взвешенный балл по шести параметрам — скорость, мощность, разгон,
+            надёжность, экологичность и технологичность — и определяет модель с наилучшим
+            сочетанием всех качеств, а не рекордсмена в одной отдельной дисциплине.
+        </p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        {% if winner %}
+        {% with car=winner.0 score=winner.1 %}
+        <div class="balanced-winner">
+            <div class="balanced-winner-photo">
+                {% if car.photo %}<img src="{{ car.photo.url }}" alt="{{ car }}">{% else %}<div class="no-photo" style="display:flex;align-items:center;justify-content:center;height:100%;color:var(--text-faint);">Фото не загружено</div>{% endif %}
+            </div>
+            <div>
+                <span class="eyebrow">Лидер рейтинга</span>
+                <h2 style="font-size:30px;">{{ car.manufacturer }} {{ car.name }}</h2>
+                <div style="color:var(--text-muted); font-family:var(--font-mono); font-size:13px; margin-bottom:4px;">{{ car.year }}</div>
+
+                <div class="balanced-score-ring">
+                    <span class="score">{{ score }}</span>
+                    <span class="max">/ 100</span>
+                </div>
+
+                <div class="spec-grid">
+                    {% if car.top_speed_kmh %}<div class="spec-item"><div class="v">{{ car.top_speed_kmh }}</div><div class="l">км/ч</div></div>{% endif %}
+                    {% if car.power_hp %}<div class="spec-item"><div class="v">{{ car.power_hp }}</div><div class="l">л.с.</div></div>{% endif %}
+                    {% if car.reliability_score %}<div class="spec-item"><div class="v">{{ car.reliability_score }}</div><div class="l">надёжность</div></div>{% endif %}
+                    {% if car.eco_score %}<div class="spec-item"><div class="v">{{ car.eco_score }}</div><div class="l">экологичность</div></div>{% endif %}
+                </div>
+
+                <a href="{{ car.get_absolute_url }}" class="btn btn-gold" style="margin-top:20px;">Открыть карточку автомобиля</a>
+
+                <div class="balanced-formula-note">
+                    Балл = 20% скорость + 15% мощность + 15% разгон (инверт.) + 20% надёжность
+                    + 15% экологичность + 15% технологичность, нормализовано по разбросу значений
+                    среди всех автомобилей реестра.
+                </div>
+            </div>
+        </div>
+        {% endwith %}
+        {% else %}
+        <div class="empty-state">
+            <h3>Недостаточно данных для расчёта</h3>
+            <p>Добавьте автомобилям индексы надёжности, экологичности и технологичности через админ-панель.</p>
+        </div>
+        {% endif %}
+
+        {% if ranking %}
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Полный рейтинг</span>
+                <h2>Топ-{{ ranking|length }} сбалансированных автомобилей</h2>
+            </div>
+        </div>
+        <div class="data-table-wrap">
+            <table class="data-table ranking-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Автомобиль</th>
+                        <th class="num">Скорость</th>
+                        <th class="num">Мощность</th>
+                        <th class="num">Надёжность</th>
+                        <th class="num">Экология</th>
+                        <th class="num">Технологии</th>
+                        <th class="num">Балл</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for car, score in ranking %}
+                    <tr>
+                        <td class="rank-num{% if forloop.counter <= 3 %} is-top3{% endif %}">{{ forloop.counter }}</td>
+                        <td>
+                            <a href="{{ car.get_absolute_url }}" class="table-car-cell">
+                                <span class="name">{{ car.manufacturer }} {{ car.name }}</span>
+                            </a>
+                        </td>
+                        <td class="num">{% if car.top_speed_kmh %}{{ car.top_speed_kmh }}{% else %}—{% endif %}</td>
+                        <td class="num">{% if car.power_hp %}{{ car.power_hp }}{% else %}—{% endif %}</td>
+                        <td class="num">{% if car.reliability_score %}{{ car.reliability_score }}{% else %}—{% endif %}</td>
+                        <td class="num">{% if car.eco_score %}{{ car.eco_score }}{% else %}—{% endif %}</td>
+                        <td class="num">{% if car.tech_score %}{{ car.tech_score }}{% else %}—{% endif %}</td>
+                        <td class="num" style="color:var(--gold-bright); font-weight:700;">{{ score }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

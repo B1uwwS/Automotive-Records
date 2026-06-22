@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% load records_extras %}
+
+{% block title %}Сравнение автомобилей{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="breadcrumbs"><a href="{% url 'records:home' %}">Главная</a> / Сравнение</div>
+        <h1>Сравнение автомобилей</h1>
+        <p class="page-header-lead">Выберите от 2 до 4 автомобилей — победитель по каждому параметру подсвечивается золотым.</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        <div class="compare-picker">
+            <form method="get" action="{% url 'records:car_list' %}" style="flex:1; min-width:240px;">
+                <label style="font-size:12px; color:var(--text-muted); display:block; margin-bottom:6px;">Добавить автомобиль из общего списка</label>
+                <a href="{% url 'records:car_list' %}" class="btn btn-outline">Перейти к списку автомобилей →</a>
+            </form>
+            {% if cars %}
+            <a href="{% url 'records:compare_clear' %}" class="btn btn-ghost" data-confirm="Очистить список сравнения?">Очистить всё</a>
+            {% endif %}
+        </div>
+
+        {% if cars|length < 2 %}
+        <div class="empty-state">
+            <h3>Недостаточно автомобилей для сравнения</h3>
+            <p>Добавьте минимум 2 автомобиля, нажав «Сравнить» на карточке в списке всех рекордов.</p>
+            <a href="{% url 'records:car_list' %}" class="btn btn-gold" style="margin-top:16px;">Выбрать автомобили</a>
+        </div>
+        {% else %}
+        <div class="compare-table-wrap">
+            <table class="compare-table">
+                <thead>
+                    <tr>
+                        <th class="row-label"></th>
+                        {% for car in cars %}
+                        <th>
+                            <div class="compare-car-card">
+                                {% if car.photo %}<img src="{{ car.photo.url }}" alt="{{ car }}">{% else %}<span class="table-car-noimg" style="width:100%;max-width:180px;aspect-ratio:16/10;display:block;border-radius:var(--radius-sm);background:var(--bg-raised-2);"></span>{% endif %}
+                                <a href="{{ car.get_absolute_url }}" class="name">{{ car.manufacturer }} {{ car.name }}</a>
+                                <span class="meta">{{ car.year }}</span>
+                                <div class="compare-remove-row">
+                                    <form action="{% url 'records:compare_toggle' car.slug %}" method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{% url 'records:compare' %}">
+                                        <button type="submit">Убрать</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="row-label">Максимальная скорость</td>
+                        {% for car in cars %}
+                        <td class="is-value{% if winners.top_speed_kmh == car.pk %} is-winner{% endif %}">{% if car.top_speed_kmh %}{{ car.top_speed_kmh }} км/ч{% else %}—{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Мощность</td>
+                        {% for car in cars %}
+                        <td class="is-value{% if winners.power_hp == car.pk %} is-winner{% endif %}">{% if car.power_hp %}{{ car.power_hp }} л.с.{% else %}—{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Разгон 0-100 км/ч</td>
+                        {% for car in cars %}
+                        <td class="is-value{% if winners.acceleration_0_100 == car.pk %} is-winner{% endif %}">{% if car.acceleration_0_100 %}{{ car.acceleration_0_100 }} с{% else %}—{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Цена</td>
+                        {% for car in cars %}
+                        <td class="is-value{% if winners.price_usd == car.pk %} is-winner{% endif %}">{{ car.price_usd|usd }}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Масса</td>
+                        {% for car in cars %}
+                        <td class="is-value{% if winners.weight_kg == car.pk %} is-winner{% endif %}">{% if car.weight_kg %}{{ car.weight_kg }} кг{% else %}—{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Надёжность</td>
+                        {% for car in cars %}
+                        <td class="is-value{% if winners.reliability_score == car.pk %} is-winner{% endif %}">{% if car.reliability_score %}{{ car.reliability_score }}{% else %}—{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Экологичность</td>
+                        {% for car in cars %}
+                        <td class="is-value{% if winners.eco_score == car.pk %} is-winner{% endif %}">{% if car.eco_score %}{{ car.eco_score }}{% else %}—{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Технологичность</td>
+                        {% for car in cars %}
+                        <td class="is-value{% if winners.tech_score == car.pk %} is-winner{% endif %}">{% if car.tech_score %}{{ car.tech_score }}{% else %}—{% endif %}</td>
+                        {% endfor %}
+                    </tr>
+                    <tr>
+                        <td class="row-label">Балл сбалансированности</td>
+                        {% for car in cars %}
+                        <td class="is-value">{% with score=car.balance_score %}{% if score %}{{ score }} / 100{% else %}—{% endif %}{% endwith %}</td>
+                        {% endfor %}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

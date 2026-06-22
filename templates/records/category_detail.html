@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="breadcrumbs"><a href="{% url 'records:home' %}">Главная</a> / {{ category.name }}</div>
+        <span class="hero-eyebrow">{{ category.icon }} Категория рекорда</span>
+        <h1>{{ category.name }}</h1>
+        {% if category.description %}<p class="page-header-lead">{{ category.description }}</p>{% endif %}
+    </div>
+</div>
+
+<section class="section">
+    <div class="container">
+        {% if current_record %}
+        <div class="ledger-plaque" style="max-width:420px; margin-bottom:48px;">
+            <div class="ledger-plaque-label">Действующий рекорд</div>
+            <div class="ledger-plaque-value">{{ current_record.value }}</div>
+            <div class="ledger-plaque-unit">{{ current_record.unit }}</div>
+            <div class="ledger-plaque-car">
+                Удерживает
+                <strong><a href="{{ current_record.car.get_absolute_url }}">{{ current_record.car }}</a></strong>
+            </div>
+        </div>
+        {% else %}
+        <div class="empty-state" style="margin-bottom:48px;">
+            <h3>В этой категории пока нет действующего рекорда</h3>
+            <p>Добавьте первую запись через панель администратора.</p>
+        </div>
+        {% endif %}
+
+        {% if records %}
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">История категории</span>
+                <h2>Все рекорды в хронологии</h2>
+            </div>
+        </div>
+        <div class="data-table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Автомобиль</th>
+                        <th class="num">Значение</th>
+                        <th>Дата</th>
+                        <th>Источник</th>
+                        <th>Статус</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in records %}
+                    <tr>
+                        <td>
+                            <a href="{{ rec.car.get_absolute_url }}" class="table-car-cell">
+                                <span>
+                                    <span class="name">{{ rec.car }}</span>
+                                </span>
+                            </a>
+                        </td>
+                        <td class="num">{{ rec.value }} {{ rec.unit }}</td>
+                        <td>{{ rec.date_set|date:"d.m.Y" }}</td>
+                        <td>{{ rec.source }}</td>
+                        <td>{% if rec.is_current %}<span class="tag">Действующий</span>{% else %}<span style="color:var(--text-faint); font-size:12px;">Побит</span>{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

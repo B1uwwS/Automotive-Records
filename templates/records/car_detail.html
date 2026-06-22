@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% load records_extras %}
+
+{% block title %}{{ car.manufacturer }} {{ car.name }}{% endblock %}
+
+{% block content %}
+<section class="car-detail-hero-wrap">
+    <div class="container">
+    <div class="car-detail-hero">
+        <div class="car-detail-photo">
+            {% if car.photo %}
+                <img src="{{ car.photo.url }}" alt="{{ car }}">
+            {% else %}
+                <div class="no-photo">Фото не загружено</div>
+            {% endif %}
+        </div>
+
+        <div class="car-detail-info">
+            <div class="breadcrumbs">
+                <a href="{% url 'records:home' %}">Главная</a> /
+                <a href="{% url 'records:car_list' %}">Все рекорды</a> /
+                {{ car.manufacturer }} {{ car.name }}
+            </div>
+
+            {% if car.record_category %}
+            <span class="tag">{{ car.record_category.name }}</span>
+            {% endif %}
+
+            <h1>{{ car.manufacturer }} {{ car.name }}</h1>
+            <div class="car-detail-manufacturer">{{ car.year }} год · {{ car.get_fuel_type_display }}</div>
+
+            {% if car.description %}
+            <p class="car-detail-desc">{{ car.description }}</p>
+            {% endif %}
+
+            <div class="car-detail-actions">
+                {% if user.is_authenticated %}
+                <form action="{% url 'records:favorite_toggle' car.slug %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn {% if is_favorite %}btn-gold{% else %}btn-outline{% endif %}">
+                        {% if is_favorite %}♥ В избранном{% else %}♡ В избранное{% endif %}
+                    </button>
+                </form>
+                {% endif %}
+                <form action="{% url 'records:compare_toggle' car.slug %}" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.path }}">
+                    <button type="submit" class="btn btn-outline">
+                        {% if car.pk in compare_ids %}В сравнении ✓{% else %}+ Добавить к сравнению{% endif %}
+                    </button>
+                </form>
+            </div>
+
+            <div class="spec-grid">
+                {% if car.top_speed_kmh %}<div class="spec-item"><div class="v">{{ car.top_speed_kmh }}</div><div class="l">км/ч макс.</div></div>{% endif %}
+                {% if car.power_hp %}<div class="spec-item"><div class="v">{{ car.power_hp }}</div><div class="l">л.с.</div></div>{% endif %}
+                {% if car.acceleration_0_100 %}<div class="spec-item"><div class="v">{{ car.acceleration_0_100 }}с</div><div class="l">0-100 км/ч</div></div>{% endif %}
+                {% if car.price_usd %}<div class="spec-item"><div class="v">{{ car.price_usd|usd }}</div><div class="l">Цена</div></div>{% endif %}
+                {% if car.weight_kg %}<div class="spec-item"><div class="v">{{ car.weight_kg }} кг</div><div class="l">Масса</div></div>{% endif %}
+                {% if car.length_mm %}<div class="spec-item"><div class="v">{{ car.length_mm }} мм</div><div class="l">Длина</div></div>{% endif %}
+            </div>
+
+            {% if balance_score %}
+            <div class="balance-meter">
+                <div class="balance-meter-head">
+                    <span>Балл сбалансированности</span>
+                    <strong>{{ balance_score }} / 100</strong>
+                </div>
+                <div class="balance-meter-track">
+                    <div class="balance-meter-fill" style="width:{{ balance_score }}%;"></div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    </div>
+</section>
+
+{% if records %}
+<section class="records-held">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Удерживаемые рекорды</span>
+                <h2>Рекорды, принадлежащие этому автомобилю</h2>
+            </div>
+        </div>
+        <div class="record-plaque-grid">
+            {% for rec in records %}
+            <div class="ledger-plaque">
+                <div class="ledger-plaque-label">{{ rec.category.name }}{% if not rec.is_current %} · побит{% endif %}</div>
+                <div class="ledger-plaque-value">{{ rec.value }}</div>
+                <div class="ledger-plaque-unit">{{ rec.unit }}</div>
+                <div class="ledger-plaque-car">
+                    {{ rec.date_set|date:"d.m.Y" }} · {{ rec.source }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if related_cars %}
+<section class="section section-soft">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Похожие модели</span>
+                <h2>Другие автомобили в категории «{{ car.record_category.name }}»</h2>
+            </div>
+        </div>
+        <div class="car-grid">
+            {% for related in related_cars %}
+                {% include "records/_car_card.html" with car=related %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% load records_extras %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-inner">
+        <div>
+            <span class="hero-eyebrow">Реестр мировых автомобильных достижений</span>
+            <h1>Книга <em>рекордов</em><br>автомобильного мира</h1>
+            <p class="hero-lead">
+                Единая цифровая энциклопедия: самые быстрые, мощные, дорогие и технологичные
+                автомобили в истории — задокументированы, сверены и сравнены.
+            </p>
+            <div class="hero-actions">
+                <a href="{% url 'records:car_list' %}" class="btn btn-gold">Смотреть все рекорды</a>
+                <a href="{% url 'records:balanced' %}" class="btn btn-outline">Идеальный баланс</a>
+            </div>
+            <div class="hero-stats">
+                <div>
+                    <div class="hero-stat-value">{{ total_cars }}</div>
+                    <div class="hero-stat-label">Автомобилей в реестре</div>
+                </div>
+                <div>
+                    <div class="hero-stat-value">{{ total_records }}</div>
+                    <div class="hero-stat-label">Действующих рекордов</div>
+                </div>
+                <div>
+                    <div class="hero-stat-value">8</div>
+                    <div class="hero-stat-label">Категорий</div>
+                </div>
+            </div>
+        </div>
+
+        {% with top_record=latest_records.0 %}
+        {% if top_record %}
+        <div class="ledger-plaque">
+            <div class="ledger-plaque-label">{{ top_record.category.name }}</div>
+            <div class="ledger-plaque-value">{{ top_record.value }}</div>
+            <div class="ledger-plaque-unit">{{ top_record.unit }}</div>
+            <div class="ledger-plaque-car">
+                Удерживает
+                <strong><a href="{{ top_record.car.get_absolute_url }}">{{ top_record.car }}</a></strong>
+            </div>
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Категории реестра</span>
+                <h2>8 направлений автомобильного превосходства</h2>
+            </div>
+        </div>
+
+        <div class="category-grid">
+            {% for cat in categories %}
+            <a href="{{ cat.get_absolute_url }}" class="category-card">
+                <span class="category-card-index">{{ forloop.counter|stringformat:"02d" }} / 08</span>
+                <span class="category-card-icon">{{ cat.icon|default:"🏁" }}</span>
+                <h3>{{ cat.name }}</h3>
+                {% with rec=cat.current_record %}
+                {% if rec %}
+                <div class="category-card-record">
+                    Текущий рекорд
+                    <strong>{{ rec.value }} {{ rec.unit }}</strong>
+                </div>
+                {% else %}
+                <div class="category-card-record">Рекорд пока не внесён</div>
+                {% endif %}
+                {% endwith %}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+{% if featured_cars %}
+<section class="section section-soft">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Избранные модели</span>
+                <h2>На страже рекордов</h2>
+            </div>
+            <a href="{% url 'records:car_list' %}" class="section-link">Все автомобили →</a>
+        </div>
+
+        <div class="car-grid">
+            {% for car in featured_cars %}
+                {% include "records/_car_card.html" %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if latest_records %}
+<section class="section">
+    <div class="container">
+        <div class="section-head">
+            <div>
+                <span class="eyebrow">Последние обновления</span>
+                <h2>Свежие записи реестра</h2>
+            </div>
+        </div>
+
+        <div class="record-row-list">
+            {% for rec in latest_records %}
+            <div class="record-row">
+                <span class="record-row-cat">{{ rec.category.name }}</span>
+                <span class="record-row-car"><a href="{{ rec.car.get_absolute_url }}">{{ rec.car }}</a></span>
+                <span class="record-row-value">{{ rec.value }} {{ rec.unit }}</span>
+                <span class="record-row-date">{{ rec.date_set|date:"d.m.Y" }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
